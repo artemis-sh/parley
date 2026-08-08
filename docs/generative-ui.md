@@ -174,25 +174,25 @@ catalogs trade some portability for richer native integration.
 
 ### Built-in maps catalog (implemented)
 
-Parley ships renderers for the experimental
-[Artemis Maps v1 catalog](https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json)
-and the immutable
-[Artemis Maps v2 catalog](https://github.com/artemis-sh/a2ui-catalogs/blob/maps-v2.0.0/catalogs/maps/v2/catalog.json).
-V2 replaces v1's point-centric shape with ordered independent point and
-schematic connection layers. Every v2 feature has a stable `{layerId,
-featureId}` identity, and map selection writes that identity only, never a
-source index or copied record. Its visible keyboard-operable feature list is the
-required accessible equivalent for map interaction.
+Parley ships a renderer for the experimental
+[Artemis Maps v1 catalog](https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json).
+It extends the Basic Catalog with one `Map` leaf for point and value-sized bubble
+maps plus curved schematic connections over bound records. Maps support automatic
+or explicit initial viewports, point and connection selection through two-way
+binding, semantic host-theme colors, formatted values, optional directional
+connection motion that respects reduced-motion preferences, and accessible data
+fallbacks.
 
 The resource controls geographic data and semantic presentation only. Parley
 owns the MapLibre renderer and a fixed OpenStreetMap raster source, including
 visible attribution; resources cannot supply tile URLs, styles, HTML markers,
 images, or executable expressions. Loading a map sends tile requests to
 OpenStreetMap, so deployments should account for its usage and privacy policy.
-The renderer lazy-loads and limits each v2 layer to 2,000 valid WGS84 points or
+The renderer lazy-loads and limits each resource to 2,000 valid WGS84 points and
 500 valid schematic connections. Capacity overflows render a validation fallback
-rather than silently truncating data. The mutable `maps/v1` catalog ID remains
-pre-release only; new integrations should use the tagged v2 contract.
+rather than silently truncating data. The mutable `maps/v1` catalog ID is
+pre-release only; the accepted Maps Catalog Roadmap defines the future immutable,
+layer-oriented replacement required before external adoption.
 
 ### Level 2: Custom catalog plugins (implemented)
 

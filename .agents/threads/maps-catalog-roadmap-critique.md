@@ -216,3 +216,19 @@ Published and merged the immutable Maps v2 contract in `artemis-sh/a2ui-catalogs
 Parley now registers that exact ID separately from experimental v1, has a v2 adapter that validates ordered independent point/connection layers, enforces stable string feature IDs and identity-only selection, rejects invalid layers independently, and supplies keyboard-operable accessible feature interaction. The demo emits v2 point and connection layers with one `/selectedFeature` `{layerId, featureId}` binding. Full Parley suite (237 tests), typecheck, Biome, and production build pass.
 
 Remaining conformance evidence is an independently implemented interactive host. Browser QA could not run in this environment because the installed `agent-browser` CLI reports its skills directory is missing; no browser result is claimed.
+
+---
+
+**OpenCode** — 2026-08-08T19:50:49+00:00
+
+## Retraction of premature v2 release
+
+The project owner correctly identified a release-sequencing error: Maps v1 had not been publicly released or announced, so publishing a tagged immutable v2 created unnecessary version churn and a misleading stability boundary.
+
+Corrective action completed:
+
+- Merged `artemis-sh/a2ui-catalogs` PR #3, reverting the published Maps v2 schema.
+- Deleted the remote and local `maps-v2.0.0` tag.
+- Removed Maps v2 negotiation, renderer, demo fixtures, contract docs, and tests from Parley's Maps PR. It now remains v1-only and explicitly experimental.
+
+The v2 layer-oriented design remains a future, unreleased roadmap artifact. It will be reconsidered only after v1 has a genuine public adoption boundary.
