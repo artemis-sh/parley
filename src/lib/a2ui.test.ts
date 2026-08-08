@@ -6,6 +6,7 @@ import {
   A2UI_CHARTS_CATALOG_ID,
   A2UI_INSTALLED_CATALOG_IDS,
   A2UI_MAPS_CATALOG_ID,
+  A2UI_MAPS_V2_CATALOG_ID,
   A2UI_MIME_TYPE,
   type A2uiCallSurfaces,
   type A2uiMessage,
@@ -1760,5 +1761,12 @@ describe("maps catalog contract", () => {
       "https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json",
     );
     expect(A2UI_INSTALLED_CATALOG_IDS).toContain(A2UI_MAPS_CATALOG_ID);
+  });
+
+  it("advertises the immutable v2 catalog ID", () => {
+    expect(A2UI_MAPS_V2_CATALOG_ID).toBe(
+      "https://github.com/artemis-sh/a2ui-catalogs/blob/maps-v2.0.0/catalogs/maps/v2/catalog.json",
+    );
+    expect(A2UI_INSTALLED_CATALOG_IDS).toContain(A2UI_MAPS_V2_CATALOG_ID);
   });
 });

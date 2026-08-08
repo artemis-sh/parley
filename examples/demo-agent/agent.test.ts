@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   A2UI_CHARTS_CATALOG_ID,
   A2UI_INSTALLED_CATALOG_IDS,
-  A2UI_MAPS_CATALOG_ID,
+  A2UI_MAPS_V2_CATALOG_ID,
   type A2uiCallSurfaces,
   type A2uiMessage,
   type A2uiOutputRef,
@@ -623,22 +623,86 @@ describe("handleDemoResponses", () => {
     const surface = reduceA2uiMessages(
       extraction.resources[0]?.messages ?? [],
     )[0];
-    expect(surface?.catalogId).toBe(A2UI_MAPS_CATALOG_ID);
+    expect(surface?.catalogId).toBe(A2UI_MAPS_V2_CATALOG_ID);
     expect(surface?.components.map).toMatchObject({
       component: "Map",
-      variant: "bubble",
-      latitude: { key: "latitude" },
-      longitude: { key: "longitude" },
-      selection: { path: "/selectedLocation" },
+      selection: { path: "/selectedFeature", mode: "single" },
     });
-    expect(surface?.components.map?.flows).toMatchObject({
-      data: { path: "/flows" },
-      fromLatitude: { key: "fromLatitude" },
-      toLongitude: { key: "toLongitude" },
-      selection: { path: "/selectedConnection" },
-    });
+    expect(surface?.components.map?.layers).toMatchObject([
+      {
+        layerId: "customer-locations",
+        type: "point",
+        featureId: { key: "id" },
+        latitude: { key: "latitude" },
+      },
+      {
+        layerId: "revenue-connections",
+        type: "connection",
+        featureId: { key: "id" },
+        toLongitude: { key: "toLongitude" },
+      },
+    ]);
     expect(pointerGet(surface?.dataModel, "/customers")).toHaveLength(5);
     expect(pointerGet(surface?.dataModel, "/flows")).toHaveLength(4);
+  });
+
+  it.each([
+    ["point-only", "show the point-only map"],
+    ["connection-only", "show the connection-only map"],
+    ["multiple-selection", "show the multiple-selection map"],
+    ["invalid-sibling", "show the invalid-sibling map"],
+    ["duplicate-ids", "show the duplicate-id map"],
+    ["capacity-overflow", "show the capacity-overflow map"],
+    ["stale-selection", "show the stale-selection map"],
+    ["antimeridian", "show the antimeridian map"],
+  ])("returns the %s Maps v2 conformance fixture", async (fixture, prompt) => {
+    const { state } = await streamAndReduce({ input: [userMessage(prompt)] });
+    const call = state.items.find((item) => item.type === "function_call") as {
+      name: string;
+    };
+    expect(call.name).toBe("get_maps_v2_fixture");
+    const output = state.items.find(
+      (item) => item.type === "function_call_output",
+    ) as FunctionCallOutputItem;
+    const extraction = extractA2uiResources(output.output);
+    expect(extraction.resources[0]?.uri).toBe(`a2ui://demo/maps-v2/${fixture}`);
+    const surface = reduceA2uiMessages(
+      extraction.resources[0]?.messages ?? [],
+    )[0];
+    expect(surface?.catalogId).toBe(A2UI_MAPS_V2_CATALOG_ID);
+    expect(surface?.components.map).toMatchObject({
+      component: "Map",
+      title: `Maps v2 fixture: ${fixture}`,
+    });
+  });
+
+  it("encodes the Maps v2 edge conditions in their conformance fixtures", async () => {
+    const fixture = async (prompt: string) => {
+      const { state } = await streamAndReduce({ input: [userMessage(prompt)] });
+      const output = state.items.find(
+        (item) => item.type === "function_call_output",
+      ) as FunctionCallOutputItem;
+      return reduceA2uiMessages(
+        extractA2uiResources(output.output).resources[0]?.messages ?? [],
+      )[0];
+    };
+    const invalid = await fixture("show the invalid-sibling map");
+    expect(invalid?.components.map?.layers).toHaveLength(2);
+    const duplicates = await fixture("show the duplicate-id map");
+    expect(pointerGet(duplicates?.dataModel, "/points/0/id")).toBe("duplicate");
+    expect(pointerGet(duplicates?.dataModel, "/points/1/id")).toBe("duplicate");
+    const overflow = await fixture("show the capacity-overflow map");
+    expect(pointerGet(overflow?.dataModel, "/points")).toHaveLength(2_001);
+    const stale = await fixture("show the stale-selection map");
+    expect(pointerGet(stale?.dataModel, "/selectedFeature")).toEqual({
+      layerId: "places",
+      featureId: "removed",
+    });
+    const antimeridian = await fixture("show the antimeridian map");
+    expect(pointerGet(antimeridian?.dataModel, "/points")).toEqual([
+      expect.objectContaining({ longitude: 179.8 }),
+      expect.objectContaining({ longitude: -179.8 }),
+    ]);
   });
 
   it("returns a range-selectable traffic chart for trend asks", async () => {
