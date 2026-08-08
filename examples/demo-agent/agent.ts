@@ -861,6 +861,124 @@ function customerMapMessages(): Array<Record<string, unknown>> {
   ];
 }
 
+type MapConformanceFixture =
+  | "point-only"
+  | "connection-only"
+  | "multiple-selection"
+  | "invalid-sibling"
+  | "duplicate-ids"
+  | "capacity-overflow"
+  | "stale-selection"
+  | "antimeridian";
+
+function mapConformanceMessages(
+  fixture: MapConformanceFixture,
+): Array<Record<string, unknown>> {
+  const surfaceId = `demo_maps_${fixture.replaceAll("-", "_")}`;
+  const points = [
+    { id: "london", name: "London", latitude: 51.5072, longitude: -0.1276 },
+    { id: "tokyo", name: "Tokyo", latitude: 35.6762, longitude: 139.6503 },
+  ];
+  const connections = [
+    { id: "london-tokyo", label: "London to Tokyo", fromLatitude: 51.5072, fromLongitude: -0.1276, toLatitude: 35.6762, toLongitude: 139.6503 },
+  ];
+  const map: Record<string, unknown> = {
+    id: "map",
+    component: "Map",
+    title: `Maps v2 fixture: ${fixture}`,
+    description: "A deterministic Maps v2 conformance fixture from the demo agent.",
+    selection: {
+      path: "/selectedFeature",
+      mode: fixture === "multiple-selection" ? "multiple" : "single",
+    },
+    layers: [],
+  };
+  const layers = map.layers as Array<Record<string, unknown>>;
+  const addPoints = (layerId = "places") =>
+    layers.push({
+      layerId,
+      type: "point",
+      data: { path: "/points" },
+      featureId: { key: "id" },
+      latitude: { key: "latitude" },
+      longitude: { key: "longitude" },
+      label: { key: "name" },
+    });
+  const addConnections = () =>
+    layers.push({
+      layerId: "connections",
+      type: "connection",
+      data: { path: "/connections" },
+      featureId: { key: "id" },
+      fromLatitude: { key: "fromLatitude" },
+      fromLongitude: { key: "fromLongitude" },
+      toLatitude: { key: "toLatitude" },
+      toLongitude: { key: "toLongitude" },
+      label: { key: "label" },
+    });
+
+  switch (fixture) {
+    case "point-only":
+    case "multiple-selection":
+    case "stale-selection":
+      addPoints();
+      break;
+    case "connection-only":
+      addConnections();
+      break;
+    case "invalid-sibling":
+      addPoints("valid-places");
+      layers.push({
+        layerId: "invalid-points",
+        type: "point",
+        data: { path: "/points" },
+        featureId: { key: "id" },
+        latitude: { key: "latitude" },
+      });
+      break;
+    case "duplicate-ids":
+    case "capacity-overflow":
+    case "antimeridian":
+      addPoints();
+      break;
+  }
+
+  const messages: Array<Record<string, unknown>> = [
+    {
+      version: A2UI_VERSION,
+      createSurface: { surfaceId, catalogId: A2UI_MAPS_V2_CATALOG_ID },
+    },
+    {
+      version: A2UI_VERSION,
+      updateComponents: {
+        surfaceId,
+        components: [
+          { id: "root", component: "Card", child: "map" },
+          map,
+        ],
+      },
+    },
+  ];
+  if (fixture !== "connection-only") {
+    const data =
+      fixture === "duplicate-ids"
+        ? [{ ...points[0] as object, id: "duplicate" }, { ...points[1] as object, id: "duplicate" }]
+        : fixture === "capacity-overflow"
+          ? Array.from({ length: 2_001 }, (_, index) => ({ id: `point-${index}`, name: `Point ${index}`, latitude: 0, longitude: 0 }))
+          : fixture === "antimeridian"
+            ? [{ id: "east", name: "East of the date line", latitude: 10, longitude: 179.8 }, { id: "west", name: "West of the date line", latitude: 10, longitude: -179.8 }]
+            : points;
+    messages.push({ version: A2UI_VERSION, updateDataModel: { surfaceId, path: "/points", value: data } });
+  }
+  if (fixture !== "point-only" && fixture !== "multiple-selection" && fixture !== "stale-selection" && fixture !== "duplicate-ids" && fixture !== "capacity-overflow" && fixture !== "antimeridian") {
+    messages.push({ version: A2UI_VERSION, updateDataModel: { surfaceId, path: "/connections", value: connections } });
+  }
+  if (fixture === "stale-selection") {
+    messages.push({ version: A2UI_VERSION, updateDataModel: { surfaceId, path: "/selectedFeature", value: { layerId: "places", featureId: "removed" } } });
+  }
+  return messages;
+}
+
 /**
  * The analysis for one selected month: update envelopes targeting the
  * existing `demo_revenue_report` surface — the insight section is appended
@@ -1319,12 +1437,46 @@ function buildReply(parsed: ReturnType<typeof lastUserText>): BuiltReply {
     };
   }
 
+  const mapFixture =
+    /\b(point.?only map)\b/.test(lower)
+      ? "point-only"
+      : /\b(connection.?only map)\b/.test(lower)
+        ? "connection-only"
+        : /\b(multiple.?selection map)\b/.test(lower)
+          ? "multiple-selection"
+          : /\b(invalid.?sibling map)\b/.test(lower)
+            ? "invalid-sibling"
+            : /\b(duplicate.?id map)\b/.test(lower)
+              ? "duplicate-ids"
+              : /\b(capacity.?overflow map)\b/.test(lower)
+                ? "capacity-overflow"
+                : /\b(stale.?selection map)\b/.test(lower)
+                  ? "stale-selection"
+                  : /\b(antimeridian map|date.?line map)\b/.test(lower)
+                    ? "antimeridian"
+                    : null;
+  if (mapFixture) {
+    return {
+      reasoning: `The user requested the ${mapFixture} Maps v2 conformance fixture.`,
+      reply: `I called \`get_maps_v2_fixture\` with the **${mapFixture}** fixture. It is a deterministic Maps v2 validation surface.`,
+      tool: {
+        name: "get_maps_v2_fixture",
+        args: JSON.stringify({ fixture: mapFixture }),
+        output: a2uiToolOutput(
+          `a2ui://demo/maps-v2/${mapFixture}`,
+          `Maps v2 conformance fixture: ${mapFixture}.`,
+          mapConformanceMessages(mapFixture),
+        ),
+      },
+    };
+  }
+
   if (/\b(map|locations?|geograph|customer footprint)\b/.test(lower)) {
     return {
       reasoning:
         "The user wants a geographic view. I'll return the customer-footprint surface from the Maps catalog.",
       reply:
-        "I called `get_customer_map` to show a **bubble map** with host-controlled OpenStreetMap tiles and selectable customer locations.",
+        "I called `get_customer_map` to show the Maps v2 customer footprint with selectable locations and schematic connections.",
       tool: {
         name: "get_customer_map",
         args: JSON.stringify({ metric: "annual revenue" }),
