@@ -30,7 +30,6 @@ export const A2UI_CHARTS_CATALOG_ID =
 export const A2UI_MAPS_CATALOG_ID =
   "https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json";
 
-
 export const A2UI_CATALOG_PLUGINS: readonly A2uiCatalogPluginManifest[] = [
   {
     key: "basic",
@@ -51,7 +50,8 @@ export const A2UI_CATALOG_PLUGINS: readonly A2uiCatalogPluginManifest[] = [
   {
     key: "maps",
     name: "A2UI Maps",
-    description: "Experimental native maps with ordered point and connection layers.",
+    description:
+      "Experimental native maps with ordered point and connection layers.",
     catalogIds: [A2UI_MAPS_CATALOG_ID],
     defaultEnabled: true,
     builtin: true,
