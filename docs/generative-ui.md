@@ -172,6 +172,27 @@ same Level 2 registration and enablement system described below. The official
 Basic Catalog stays the preferred option whenever it is sufficient; custom
 catalogs trade some portability for richer native integration.
 
+### Built-in maps catalog (implemented)
+
+Parley ships a renderer for the experimental
+[Artemis Maps v1 catalog](https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json).
+It extends the Basic Catalog with one layer-oriented `Map` leaf for ordered point
+and schematic connection records. Layers use stable feature IDs and
+identity-only selection; invalid layers fall back independently. Its visible
+keyboard-operable feature list is the required accessible equivalent for map
+interaction.
+
+The resource controls geographic data and semantic presentation only. Parley
+owns the MapLibre renderer and a fixed OpenStreetMap raster source, including
+visible attribution; resources cannot supply tile URLs, styles, HTML markers,
+images, or executable expressions. Loading a map sends tile requests to
+OpenStreetMap, so deployments should account for its usage and privacy policy.
+The renderer lazy-loads and limits each layer to 2,000 valid WGS84 points or 500
+valid schematic connections. Capacity overflows render a validation fallback
+rather than silently truncating data. The mutable `maps/v1` catalog ID is
+pre-release only; it will be frozen or replaced with an immutable ID only after
+an external compatibility boundary exists.
+
 ### Level 2: Custom catalog plugins (implemented)
 
 Parley supports installed catalog plugins for domains that need more specialized
@@ -182,8 +203,8 @@ A plugin must provide both the catalog contract and trusted renderer
 implementations. Catalogs are explicitly installed and negotiated; receiving
 an unknown catalog must not cause Parley to download or execute arbitrary code.
 
-Built-in catalogs, including the official Basic Catalog and Parley's charts
-catalog, use the same registration system as externally installed catalogs.
+Built-in catalogs, including the official Basic Catalog and Parley's charts and
+maps catalogs, use the same registration system as externally installed catalogs.
 They are enabled by default, and deployment administrators can disable them or
 enable other installed catalog plugins.
 
@@ -194,7 +215,7 @@ only the enabled plugin keys. The effective catalog IDs are the intersection of
 those settings and the plugins installed in the current build, and are supplied
 to both server-side and browser rendering through the root app configuration.
 
-The initial installed plugins are `basic` and `charts`. Self-hosters can add a
+The initial installed plugins are `basic`, `charts`, and `maps`. Self-hosters can add a
 trusted plugin module to the build-time registries, rebuild Parley, and then let
 an administrator enable it from the Catalogs tab. A future packaging API can
 make that installation seam more convenient without changing the runtime trust

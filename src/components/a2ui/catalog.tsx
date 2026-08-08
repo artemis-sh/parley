@@ -999,6 +999,12 @@ const LazyGaugeView = lazy(() =>
   })),
 );
 
+const LazyMapV1View = lazy(() =>
+  import("~/components/a2ui/maps-v1").then((module) => ({
+    default: module.MapV1View,
+  })),
+);
+
 /**
  * Contains failures from the charting library (or a chunk that failed to
  * load) to an inert placeholder: a malformed chart resource must degrade
@@ -1016,7 +1022,7 @@ class ChartViewBoundary extends Component<
     if (!this.state.failed) return this.props.children;
     return (
       <div className="rounded-lg border border-dashed px-2.5 py-1.5 text-muted-foreground text-xs">
-        This chart couldn't be rendered.
+        This visualization couldn't be rendered.
       </div>
     );
   }
@@ -1105,6 +1111,23 @@ function SuspendedGaugeView(props: ViewProps) {
   );
 }
 
+function SuspendedMapV1View(props: ViewProps) {
+  return (
+    <ChartViewBoundary>
+      <Suspense
+        fallback={
+          <div
+            aria-hidden
+            className="h-64 w-full animate-pulse rounded-lg bg-muted/40"
+          />
+        }
+      >
+        <LazyMapV1View {...props} />
+      </Suspense>
+    </ChartViewBoundary>
+  );
+}
+
 const chartsComponentViews: A2uiComponentViews = {
   ...basicComponentViews,
   Chart: SuspendedChartView,
@@ -1114,6 +1137,11 @@ const chartsComponentViews: A2uiComponentViews = {
   Gauge: SuspendedGaugeView,
 };
 
+const mapsV1ComponentViews: A2uiComponentViews = {
+  ...basicComponentViews,
+  Map: SuspendedMapV1View,
+};
+
 /**
  * Trusted renderer plugins installed in this build. Plugin manifests and
  * renderers use the same keys so built-in and external plugins share one path.
@@ -1121,6 +1149,7 @@ const chartsComponentViews: A2uiComponentViews = {
 const pluginViews: Record<string, A2uiComponentViews> = {
   basic: basicComponentViews,
   charts: chartsComponentViews,
+  maps: mapsV1ComponentViews,
 };
 
 const catalogViews: Record<string, A2uiComponentViews> = Object.fromEntries(

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   A2UI_CHARTS_CATALOG_ID,
   A2UI_INSTALLED_CATALOG_IDS,
+  A2UI_MAPS_CATALOG_ID,
   A2UI_MIME_TYPE,
   type A2uiCallSurfaces,
   type A2uiMessage,
@@ -304,10 +305,11 @@ describe("reduceA2uiMessages", () => {
 });
 
 describe("A2UI catalog plugins", () => {
-  it("registers Basic and Charts through the same manifest", () => {
+  it("registers Basic, Charts, and Maps through the same manifest", () => {
     expect(A2UI_CATALOG_PLUGINS.map((plugin) => plugin.key)).toEqual([
       "basic",
       "charts",
+      "maps",
     ]);
     expect(catalogIdsForPluginKeys(A2UI_DEFAULT_ENABLED_PLUGIN_KEYS)).toEqual(
       A2UI_INSTALLED_CATALOG_IDS,
@@ -316,8 +318,8 @@ describe("A2UI catalog plugins", () => {
 
   it("normalizes enabled keys against installed plugins", () => {
     expect(
-      normalizeA2uiCatalogPluginKeys(["charts", "missing", "charts"]),
-    ).toEqual(["charts"]);
+      normalizeA2uiCatalogPluginKeys(["charts", "maps", "missing", "charts"]),
+    ).toEqual(["charts", "maps"]);
     expect(normalizeA2uiCatalogPluginKeys(undefined)).toEqual([]);
   });
 });
@@ -1749,5 +1751,14 @@ describe("charts catalog contract", () => {
       "https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/charts/v1/catalog.json",
     );
     expect(A2UI_INSTALLED_CATALOG_IDS).toContain(A2UI_CHARTS_CATALOG_ID);
+  });
+});
+
+describe("maps catalog contract", () => {
+  it("advertises the independently owned catalog ID", () => {
+    expect(A2UI_MAPS_CATALOG_ID).toBe(
+      "https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json",
+    );
+    expect(A2UI_INSTALLED_CATALOG_IDS).toContain(A2UI_MAPS_CATALOG_ID);
   });
 });

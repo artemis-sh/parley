@@ -32,6 +32,7 @@ export {
   A2UI_CHARTS_CATALOG_ID,
   /** Catalog IDs installed in this build, independent of admin enablement. */
   A2UI_INSTALLED_CATALOG_IDS,
+  A2UI_MAPS_CATALOG_ID,
 } from "~/lib/a2ui-catalog-plugins";
 
 /* ------------------------------- constants ------------------------------- */

@@ -3,6 +3,8 @@
 const A2UI_MIME_TYPE = "application/a2ui+json";
 const A2UI_CHARTS_CATALOG_ID =
   "https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/charts/v1/catalog.json";
+const A2UI_MAPS_CATALOG_ID =
+  "https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json";
 
 type ContentPart = Record<string, unknown> & { type: string };
 type ORItem = Record<string, unknown> & { type: string };
@@ -757,6 +759,226 @@ function deliveryHealthMessages(): Array<Record<string, unknown>> {
   ];
 }
 
+function customerMapMessages(): Array<Record<string, unknown>> {
+  const surfaceId = "demo_customer_map";
+  const components = [
+    { id: "root", component: "Card", child: "layout" },
+    {
+      id: "layout",
+      component: "Column",
+      children: ["title", "subtitle", "map", "footer"],
+    },
+    { id: "title", component: "Text", variant: "h3", text: "Customer footprint" },
+    {
+      id: "subtitle",
+      component: "Text",
+      variant: "caption",
+      text: "Revenue connections from New York to each customer region. Select a feature to explore it.",
+    },
+    {
+      id: "map",
+      component: "Map",
+      title: "Global customer revenue flows",
+      description:
+        "Customer locations and schematic revenue connections from New York.",
+      height: 340,
+      selection: { path: "/selectedFeature", mode: "single" },
+      layers: [
+        {
+          layerId: "customer-locations",
+          type: "point",
+          data: { path: "/customers" },
+          featureId: { key: "id" },
+          latitude: { key: "latitude" },
+          longitude: { key: "longitude" },
+          label: { key: "name" },
+          variant: "bubble",
+          color: "chart-2",
+        },
+        {
+          layerId: "revenue-connections",
+          type: "connection",
+          data: { path: "/flows" },
+          featureId: { key: "id" },
+          fromLatitude: { key: "fromLatitude" },
+          fromLongitude: { key: "fromLongitude" },
+          toLatitude: { key: "toLatitude" },
+          toLongitude: { key: "toLongitude" },
+          label: { key: "label" },
+          color: "chart-4",
+          animated: true,
+        },
+      ],
+    },
+    { id: "footer", component: "Row", justify: "end", children: ["analyze"] },
+    { id: "analyze_text", component: "Text", text: "Analyze location" },
+    {
+      id: "analyze",
+      component: "Button",
+      variant: "primary",
+      child: "analyze_text",
+      action: {
+        event: {
+          name: "analyze_location",
+          context: { selection: { path: "/selectedFeature" } },
+        },
+      },
+    },
+  ];
+  return [
+    {
+      version: A2UI_VERSION,
+      createSurface: { surfaceId, catalogId: A2UI_MAPS_CATALOG_ID },
+    },
+    { version: A2UI_VERSION, updateComponents: { surfaceId, components } },
+    {
+      version: A2UI_VERSION,
+      updateDataModel: {
+        surfaceId,
+        path: "/customers",
+        value: [
+          { id: "nyc", name: "New York", latitude: 40.7128, longitude: -74.006, revenue: 425_000 },
+          { id: "london", name: "London", latitude: 51.5072, longitude: -0.1276, revenue: 310_000 },
+          { id: "bogota", name: "Bogotá", latitude: 4.711, longitude: -74.0721, revenue: 190_000 },
+          { id: "singapore", name: "Singapore", latitude: 1.3521, longitude: 103.8198, revenue: 265_000 },
+          { id: "sydney", name: "Sydney", latitude: -33.8688, longitude: 151.2093, revenue: 225_000 },
+        ],
+      },
+    },
+    {
+      version: A2UI_VERSION,
+      updateDataModel: {
+        surfaceId,
+        path: "/flows",
+        value: [
+          { id: "nyc-london", label: "New York → London", fromLatitude: 40.7128, fromLongitude: -74.006, toLatitude: 51.5072, toLongitude: -0.1276, revenue: 310_000 },
+          { id: "nyc-bogota", label: "New York → Bogotá", fromLatitude: 40.7128, fromLongitude: -74.006, toLatitude: 4.711, toLongitude: -74.0721, revenue: 190_000 },
+          { id: "nyc-singapore", label: "New York → Singapore", fromLatitude: 40.7128, fromLongitude: -74.006, toLatitude: 1.3521, toLongitude: 103.8198, revenue: 265_000 },
+          { id: "nyc-sydney", label: "New York → Sydney", fromLatitude: 40.7128, fromLongitude: -74.006, toLatitude: -33.8688, toLongitude: 151.2093, revenue: 225_000 },
+        ],
+      },
+    },
+  ];
+}
+
+type MapConformanceFixture =
+  | "point-only"
+  | "connection-only"
+  | "multiple-selection"
+  | "invalid-sibling"
+  | "duplicate-ids"
+  | "capacity-overflow"
+  | "stale-selection"
+  | "antimeridian";
+
+function mapConformanceMessages(
+  fixture: MapConformanceFixture,
+): Array<Record<string, unknown>> {
+  const surfaceId = `demo_maps_${fixture.replaceAll("-", "_")}`;
+  const points = [
+    { id: "london", name: "London", latitude: 51.5072, longitude: -0.1276 },
+    { id: "tokyo", name: "Tokyo", latitude: 35.6762, longitude: 139.6503 },
+  ];
+  const connections = [
+    { id: "london-tokyo", label: "London to Tokyo", fromLatitude: 51.5072, fromLongitude: -0.1276, toLatitude: 35.6762, toLongitude: 139.6503 },
+  ];
+  const map: Record<string, unknown> = {
+    id: "map",
+    component: "Map",
+    title: `Maps v1 fixture: ${fixture}`,
+    description: "A deterministic Maps v1 conformance fixture from the demo agent.",
+    selection: {
+      path: "/selectedFeature",
+      mode: fixture === "multiple-selection" ? "multiple" : "single",
+    },
+    layers: [],
+  };
+  const layers = map.layers as Array<Record<string, unknown>>;
+  const addPoints = (layerId = "places") =>
+    layers.push({
+      layerId,
+      type: "point",
+      data: { path: "/points" },
+      featureId: { key: "id" },
+      latitude: { key: "latitude" },
+      longitude: { key: "longitude" },
+      label: { key: "name" },
+    });
+  const addConnections = () =>
+    layers.push({
+      layerId: "connections",
+      type: "connection",
+      data: { path: "/connections" },
+      featureId: { key: "id" },
+      fromLatitude: { key: "fromLatitude" },
+      fromLongitude: { key: "fromLongitude" },
+      toLatitude: { key: "toLatitude" },
+      toLongitude: { key: "toLongitude" },
+      label: { key: "label" },
+    });
+
+  switch (fixture) {
+    case "point-only":
+    case "multiple-selection":
+    case "stale-selection":
+      addPoints();
+      break;
+    case "connection-only":
+      addConnections();
+      break;
+    case "invalid-sibling":
+      addPoints("valid-places");
+      layers.push({
+        layerId: "invalid-points",
+        type: "point",
+        data: { path: "/points" },
+        featureId: { key: "id" },
+        latitude: { key: "latitude" },
+      });
+      break;
+    case "duplicate-ids":
+    case "capacity-overflow":
+    case "antimeridian":
+      addPoints();
+      break;
+  }
+
+  const messages: Array<Record<string, unknown>> = [
+    {
+      version: A2UI_VERSION,
+      createSurface: { surfaceId, catalogId: A2UI_MAPS_CATALOG_ID },
+    },
+    {
+      version: A2UI_VERSION,
+      updateComponents: {
+        surfaceId,
+        components: [
+          { id: "root", component: "Card", child: "map" },
+          map,
+        ],
+      },
+    },
+  ];
+  if (fixture !== "connection-only") {
+    const data =
+      fixture === "duplicate-ids"
+        ? [{ ...points[0] as object, id: "duplicate" }, { ...points[1] as object, id: "duplicate" }]
+        : fixture === "capacity-overflow"
+          ? Array.from({ length: 2_001 }, (_, index) => ({ id: `point-${index}`, name: `Point ${index}`, latitude: 0, longitude: 0 }))
+          : fixture === "antimeridian"
+            ? [{ id: "east", name: "East of the date line", latitude: 10, longitude: 179.8 }, { id: "west", name: "West of the date line", latitude: 10, longitude: -179.8 }]
+            : points;
+    messages.push({ version: A2UI_VERSION, updateDataModel: { surfaceId, path: "/points", value: data } });
+  }
+  if (fixture !== "point-only" && fixture !== "multiple-selection" && fixture !== "stale-selection" && fixture !== "duplicate-ids" && fixture !== "capacity-overflow" && fixture !== "antimeridian") {
+    messages.push({ version: A2UI_VERSION, updateDataModel: { surfaceId, path: "/connections", value: connections } });
+  }
+  if (fixture === "stale-selection") {
+    messages.push({ version: A2UI_VERSION, updateDataModel: { surfaceId, path: "/selectedFeature", value: { layerId: "places", featureId: "removed" } } });
+  }
+  return messages;
+}
+
 /**
  * The analysis for one selected month: update envelopes targeting the
  * existing `demo_revenue_report` surface — the insight section is appended
@@ -1210,6 +1432,58 @@ function buildReply(parsed: ReturnType<typeof lastUserText>): BuiltReply {
           "a2ui://demo/traffic-report",
           `Site traffic, last ${TRAFFIC_DAYS.length} days: ${num(total)} sessions total (avg ${num(total / TRAFFIC_DAYS.length)}/day). Drag a range in the chart to summarize it.`,
           trafficReportMessages(),
+        ),
+      },
+    };
+  }
+
+  const mapFixture =
+    /\b(point.?only map)\b/.test(lower)
+      ? "point-only"
+      : /\b(connection.?only map)\b/.test(lower)
+        ? "connection-only"
+        : /\b(multiple.?selection map)\b/.test(lower)
+          ? "multiple-selection"
+          : /\b(invalid.?sibling map)\b/.test(lower)
+            ? "invalid-sibling"
+            : /\b(duplicate.?id map)\b/.test(lower)
+              ? "duplicate-ids"
+              : /\b(capacity.?overflow map)\b/.test(lower)
+                ? "capacity-overflow"
+                : /\b(stale.?selection map)\b/.test(lower)
+                  ? "stale-selection"
+                  : /\b(antimeridian map|date.?line map)\b/.test(lower)
+                    ? "antimeridian"
+                    : null;
+  if (mapFixture) {
+    return {
+      reasoning: `The user requested the ${mapFixture} Maps v1 conformance fixture.`,
+      reply: `I called \`get_maps_v1_fixture\` with the **${mapFixture}** fixture. It is a deterministic Maps v1 validation surface.`,
+      tool: {
+        name: "get_maps_v1_fixture",
+        args: JSON.stringify({ fixture: mapFixture }),
+        output: a2uiToolOutput(
+          `a2ui://demo/maps-v1/${mapFixture}`,
+          `Maps v1 conformance fixture: ${mapFixture}.`,
+          mapConformanceMessages(mapFixture),
+        ),
+      },
+    };
+  }
+
+  if (/\b(map|locations?|geograph|customer footprint)\b/.test(lower)) {
+    return {
+      reasoning:
+        "The user wants a geographic view. I'll return the customer-footprint surface from the Maps catalog.",
+      reply:
+        "I called `get_customer_map` to show the experimental Maps v1 customer footprint with selectable locations and schematic connections.",
+      tool: {
+        name: "get_customer_map",
+        args: JSON.stringify({ metric: "annual revenue" }),
+        output: a2uiToolOutput(
+          "a2ui://demo/customer-map",
+          "Customer footprint across five locations, sized by annual revenue.",
+          customerMapMessages(),
         ),
       },
     };
