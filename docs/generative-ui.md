@@ -174,25 +174,24 @@ catalogs trade some portability for richer native integration.
 
 ### Built-in maps catalog (implemented)
 
-Parley ships renderers for the experimental
-[Artemis Maps v1 catalog](https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json)
-and the immutable
-[Artemis Maps v2 catalog](https://github.com/artemis-sh/a2ui-catalogs/blob/maps-v2.0.0/catalogs/maps/v2/catalog.json).
-V2 replaces v1's point-centric shape with ordered independent point and
-schematic connection layers. Every v2 feature has a stable `{layerId,
-featureId}` identity, and map selection writes that identity only, never a
-source index or copied record. Its visible keyboard-operable feature list is the
-required accessible equivalent for map interaction.
+Parley ships a renderer for the experimental
+[Artemis Maps v1 catalog](https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json).
+It extends the Basic Catalog with one layer-oriented `Map` leaf for ordered point
+and schematic connection records. Layers use stable feature IDs and
+identity-only selection; invalid layers fall back independently. Its visible
+keyboard-operable feature list is the required accessible equivalent for map
+interaction.
 
 The resource controls geographic data and semantic presentation only. Parley
 owns the MapLibre renderer and a fixed OpenStreetMap raster source, including
 visible attribution; resources cannot supply tile URLs, styles, HTML markers,
 images, or executable expressions. Loading a map sends tile requests to
 OpenStreetMap, so deployments should account for its usage and privacy policy.
-The renderer lazy-loads and limits each v2 layer to 2,000 valid WGS84 points or
-500 valid schematic connections. Capacity overflows render a validation fallback
-rather than silently truncating data. The mutable `maps/v1` catalog ID remains
-pre-release only; new integrations should use the tagged v2 contract.
+The renderer lazy-loads and limits each layer to 2,000 valid WGS84 points or 500
+valid schematic connections. Capacity overflows render a validation fallback
+rather than silently truncating data. The mutable `maps/v1` catalog ID is
+pre-release only; it will be frozen or replaced with an immutable ID only after
+an external compatibility boundary exists.
 
 ### Level 2: Custom catalog plugins (implemented)
 

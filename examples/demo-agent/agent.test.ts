@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   A2UI_CHARTS_CATALOG_ID,
   A2UI_INSTALLED_CATALOG_IDS,
-  A2UI_MAPS_V2_CATALOG_ID,
+  A2UI_MAPS_CATALOG_ID,
   type A2uiCallSurfaces,
   type A2uiMessage,
   type A2uiOutputRef,
@@ -623,7 +623,7 @@ describe("handleDemoResponses", () => {
     const surface = reduceA2uiMessages(
       extraction.resources[0]?.messages ?? [],
     )[0];
-    expect(surface?.catalogId).toBe(A2UI_MAPS_V2_CATALOG_ID);
+    expect(surface?.catalogId).toBe(A2UI_MAPS_CATALOG_ID);
     expect(surface?.components.map).toMatchObject({
       component: "Map",
       selection: { path: "/selectedFeature", mode: "single" },
@@ -655,28 +655,28 @@ describe("handleDemoResponses", () => {
     ["capacity-overflow", "show the capacity-overflow map"],
     ["stale-selection", "show the stale-selection map"],
     ["antimeridian", "show the antimeridian map"],
-  ])("returns the %s Maps v2 conformance fixture", async (fixture, prompt) => {
+  ])("returns the %s Maps v1 conformance fixture", async (fixture, prompt) => {
     const { state } = await streamAndReduce({ input: [userMessage(prompt)] });
     const call = state.items.find((item) => item.type === "function_call") as {
       name: string;
     };
-    expect(call.name).toBe("get_maps_v2_fixture");
+    expect(call.name).toBe("get_maps_v1_fixture");
     const output = state.items.find(
       (item) => item.type === "function_call_output",
     ) as FunctionCallOutputItem;
     const extraction = extractA2uiResources(output.output);
-    expect(extraction.resources[0]?.uri).toBe(`a2ui://demo/maps-v2/${fixture}`);
+    expect(extraction.resources[0]?.uri).toBe(`a2ui://demo/maps-v1/${fixture}`);
     const surface = reduceA2uiMessages(
       extraction.resources[0]?.messages ?? [],
     )[0];
-    expect(surface?.catalogId).toBe(A2UI_MAPS_V2_CATALOG_ID);
+    expect(surface?.catalogId).toBe(A2UI_MAPS_CATALOG_ID);
     expect(surface?.components.map).toMatchObject({
       component: "Map",
-      title: `Maps v2 fixture: ${fixture}`,
+      title: `Maps v1 fixture: ${fixture}`,
     });
   });
 
-  it("encodes the Maps v2 edge conditions in their conformance fixtures", async () => {
+  it("encodes the Maps v1 edge conditions in their conformance fixtures", async () => {
     const fixture = async (prompt: string) => {
       const { state } = await streamAndReduce({ input: [userMessage(prompt)] });
       const output = state.items.find(

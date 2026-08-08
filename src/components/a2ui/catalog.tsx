@@ -999,15 +999,9 @@ const LazyGaugeView = lazy(() =>
   })),
 );
 
-const LazyMapView = lazy(() =>
-  import("~/components/a2ui/maps").then((module) => ({
-    default: module.MapView,
-  })),
-);
-
-const LazyMapV2View = lazy(() =>
-  import("~/components/a2ui/maps-v2").then((module) => ({
-    default: module.MapV2View,
+const LazyMapV1View = lazy(() =>
+  import("~/components/a2ui/maps-v1").then((module) => ({
+    default: module.MapV1View,
   })),
 );
 
@@ -1117,24 +1111,7 @@ function SuspendedGaugeView(props: ViewProps) {
   );
 }
 
-function SuspendedMapView(props: ViewProps) {
-  return (
-    <ChartViewBoundary>
-      <Suspense
-        fallback={
-          <div
-            aria-hidden
-            className="h-80 w-full animate-pulse rounded-lg bg-muted/40"
-          />
-        }
-      >
-        <LazyMapView {...props} />
-      </Suspense>
-    </ChartViewBoundary>
-  );
-}
-
-function SuspendedMapV2View(props: ViewProps) {
+function SuspendedMapV1View(props: ViewProps) {
   return (
     <ChartViewBoundary>
       <Suspense
@@ -1145,7 +1122,7 @@ function SuspendedMapV2View(props: ViewProps) {
           />
         }
       >
-        <LazyMapV2View {...props} />
+        <LazyMapV1View {...props} />
       </Suspense>
     </ChartViewBoundary>
   );
@@ -1160,14 +1137,9 @@ const chartsComponentViews: A2uiComponentViews = {
   Gauge: SuspendedGaugeView,
 };
 
-const mapsComponentViews: A2uiComponentViews = {
+const mapsV1ComponentViews: A2uiComponentViews = {
   ...basicComponentViews,
-  Map: SuspendedMapView,
-};
-
-const mapsV2ComponentViews: A2uiComponentViews = {
-  ...basicComponentViews,
-  Map: SuspendedMapV2View,
+  Map: SuspendedMapV1View,
 };
 
 /**
@@ -1177,22 +1149,15 @@ const mapsV2ComponentViews: A2uiComponentViews = {
 const pluginViews: Record<string, A2uiComponentViews> = {
   basic: basicComponentViews,
   charts: chartsComponentViews,
-  maps: mapsComponentViews,
-  mapsV2: mapsV2ComponentViews,
+  maps: mapsV1ComponentViews,
 };
 
 const catalogViews: Record<string, A2uiComponentViews> = Object.fromEntries(
-  A2UI_CATALOG_PLUGINS.flatMap((plugin) =>
-    plugin.catalogIds.map((catalogId) => {
-      const views =
-        plugin.key === "maps" && plugin.catalogIds.indexOf(catalogId) > 0
-          ? pluginViews.mapsV2
-          : pluginViews[plugin.key];
-      if (!views)
-        throw new Error(`Missing A2UI renderer plugin: ${plugin.key}`);
-      return [catalogId, views] as const;
-    }),
-  ),
+  A2UI_CATALOG_PLUGINS.flatMap((plugin) => {
+    const views = pluginViews[plugin.key];
+    if (!views) throw new Error(`Missing A2UI renderer plugin: ${plugin.key}`);
+    return plugin.catalogIds.map((catalogId) => [catalogId, views] as const);
+  }),
 );
 
 /**

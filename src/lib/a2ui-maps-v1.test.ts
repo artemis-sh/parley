@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  isMapsV2FeatureReference,
+  isMapsV1FeatureReference,
   MAPS_V2_MINIMUM_CAPACITY,
-  validateMapsV2Layers,
-  validateMapsV2Selection,
-} from "~/lib/a2ui-maps-v2";
+  validateMapsV1Layers,
+  validateMapsV1Selection,
+} from "~/lib/a2ui-maps-v1";
 
 const pointLayer = {
   layerId: "places",
@@ -15,10 +15,10 @@ const pointLayer = {
   longitude: { key: "longitude" },
 };
 
-describe("Maps v2 contract", () => {
+describe("Maps v1 layer contract", () => {
   it("accepts independent point and connection layers in producer order", () => {
     expect(
-      validateMapsV2Layers([
+      validateMapsV1Layers([
         pointLayer,
         {
           layerId: "connections",
@@ -36,7 +36,7 @@ describe("Maps v2 contract", () => {
 
   it("rejects malformed layers atomically", () => {
     expect(
-      validateMapsV2Layers([{ ...pointLayer, featureId: undefined }]),
+      validateMapsV1Layers([{ ...pointLayer, featureId: undefined }]),
     ).toEqual([
       {
         layerId: "places",
@@ -44,10 +44,10 @@ describe("Maps v2 contract", () => {
       },
     ]);
     expect(
-      validateMapsV2Layers([{ ...pointLayer, layerId: "places" }, pointLayer]),
+      validateMapsV1Layers([{ ...pointLayer, layerId: "places" }, pointLayer]),
     ).toEqual([{ layerId: "places", message: "Layer IDs must be unique." }]);
     expect(
-      validateMapsV2Layers(
+      validateMapsV1Layers(
         Array.from(
           { length: MAPS_V2_MINIMUM_CAPACITY.layers + 1 },
           () => pointLayer,
@@ -67,17 +67,17 @@ describe("Maps v2 contract", () => {
       "connections\u0000nyc-london",
     ]);
     expect(
-      isMapsV2FeatureReference({ layerId: "places", featureId: "london" }),
+      isMapsV1FeatureReference({ layerId: "places", featureId: "london" }),
     ).toBe(true);
-    expect(validateMapsV2Selection(null, known)).toBeNull();
+    expect(validateMapsV1Selection(null, known)).toBeNull();
     expect(
-      validateMapsV2Selection(
+      validateMapsV1Selection(
         { layerId: "places", featureId: "london" },
         known,
       ),
     ).toBeNull();
     expect(
-      validateMapsV2Selection(
+      validateMapsV1Selection(
         [
           { layerId: "places", featureId: "london" },
           { layerId: "places", featureId: "london" },
@@ -86,7 +86,7 @@ describe("Maps v2 contract", () => {
       ),
     ).toBe("Selection contains duplicate feature references.");
     expect(
-      validateMapsV2Selection(
+      validateMapsV1Selection(
         { layerId: "places", featureId: "unknown" },
         known,
       ),

@@ -1,5 +1,5 @@
 /**
- * Renderer-independent validation for the proposed immutable Maps v2 contract.
+ * Renderer-independent validation for the experimental Maps v1 layer contract.
  * A host renders only layers that validate as a whole; it must never retain a
  * first-N prefix when a layer exceeds its published capacity.
  */
@@ -14,12 +14,12 @@ export const MAPS_V2_MINIMUM_CAPACITY = {
   multiSelection: 100,
 } as const;
 
-export type MapsV2FeatureReference = {
+export type MapsV1FeatureReference = {
   layerId: string;
   featureId: string;
 };
 
-export type MapsV2LayerError = {
+export type MapsV1LayerError = {
   layerId: string | null;
   message: string;
 };
@@ -60,7 +60,7 @@ function requiredFields(
  * Validates only portable layer shape. Record-level data validation belongs to
  * the host's layer parser, because it resolves A2UI bindings against a model.
  */
-export function validateMapsV2Layers(value: unknown): MapsV2LayerError[] {
+export function validateMapsV1Layers(value: unknown): MapsV1LayerError[] {
   if (!Array.isArray(value)) {
     return [{ layerId: null, message: "Map layers must be an array." }];
   }
@@ -76,7 +76,7 @@ export function validateMapsV2Layers(value: unknown): MapsV2LayerError[] {
     ];
   }
 
-  const errors: MapsV2LayerError[] = [];
+  const errors: MapsV1LayerError[] = [];
   const ids = new Set<string>();
   for (const valueLayer of value) {
     const layer = asRecord(valueLayer);
@@ -137,9 +137,9 @@ export function validateMapsV2Layers(value: unknown): MapsV2LayerError[] {
 }
 
 /** Persistent selection contains identities only, never copied source records. */
-export function isMapsV2FeatureReference(
+export function isMapsV1FeatureReference(
   value: unknown,
-): value is MapsV2FeatureReference {
+): value is MapsV1FeatureReference {
   const reference = asRecord(value);
   return (
     layerId(reference?.layerId) !== null &&
@@ -149,7 +149,7 @@ export function isMapsV2FeatureReference(
   );
 }
 
-export function validateMapsV2Selection(
+export function validateMapsV1Selection(
   value: unknown,
   knownFeatures: ReadonlySet<string>,
 ): string | null {
@@ -160,7 +160,7 @@ export function validateMapsV2Selection(
   }
   const seen = new Set<string>();
   for (const reference of values) {
-    if (!isMapsV2FeatureReference(reference))
+    if (!isMapsV1FeatureReference(reference))
       return "Selection has an invalid feature reference.";
     const key = `${reference.layerId}\u0000${reference.featureId}`;
     if (seen.has(key))

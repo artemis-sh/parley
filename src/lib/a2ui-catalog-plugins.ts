@@ -30,9 +30,6 @@ export const A2UI_CHARTS_CATALOG_ID =
 export const A2UI_MAPS_CATALOG_ID =
   "https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json";
 
-/** Immutable Maps v2 release contract. */
-export const A2UI_MAPS_V2_CATALOG_ID =
-  "https://github.com/artemis-sh/a2ui-catalogs/blob/maps-v2.0.0/catalogs/maps/v2/catalog.json";
 
 export const A2UI_CATALOG_PLUGINS: readonly A2uiCatalogPluginManifest[] = [
   {
@@ -54,8 +51,8 @@ export const A2UI_CATALOG_PLUGINS: readonly A2uiCatalogPluginManifest[] = [
   {
     key: "maps",
     name: "A2UI Maps",
-    description: "Native maps with experimental v1 and immutable v2 layers.",
-    catalogIds: [A2UI_MAPS_CATALOG_ID, A2UI_MAPS_V2_CATALOG_ID],
+    description: "Experimental native maps with ordered point and connection layers.",
+    catalogIds: [A2UI_MAPS_CATALOG_ID],
     defaultEnabled: true,
     builtin: true,
   },

@@ -1,9 +1,9 @@
-# Maps v2 Core Contract
+# Maps v1 Layer Contract
 
-This document summarizes the implementation-ready core contract published at
-the immutable `maps-v2.0.0` release ID:
+This document summarizes the implementation-ready layer contract co-developed
+under the experimental Maps v1 ID:
 
-`https://github.com/artemis-sh/a2ui-catalogs/blob/maps-v2.0.0/catalogs/maps/v2/catalog.json`
+`https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json`
 
 ## Boundary
 
@@ -22,7 +22,7 @@ An invalid or over-capacity layer has a visible and nonvisual validation
 fallback; independently valid layers continue rendering. Hosts must not reorder,
 silently omit, truncate, aggregate, or retain a prefix of a valid layer.
 
-The v2 core admits these independent layer types:
+The v1 layer contract admits these independent layer types:
 
 - `point`: requires `featureId`, `latitude`, and `longitude` field mappings.
 - `connection`: requires `featureId`, `fromLatitude`, `fromLongitude`,
@@ -50,7 +50,7 @@ Basic Catalog list use this identical reference shape.
 
 ## Minimum Capacities
 
-Every conforming v2 host supports at least 2,000 valid point records and 500
+Every conforming v1 host supports at least 2,000 valid point records and 500
 valid connection records per layer. It supports no fewer than 12 layers. Limits
 also apply to labels (512 characters), feature IDs, selections, and updates as
 specified by the immutable release document. Overflow rejects the whole layer
@@ -67,7 +67,7 @@ viewport merely because it pans, fits, or receives a programmatic camera change.
 
 ## Release Prerequisites
 
-The immutable schema is published and registered in Parley. Remaining release
-evidence includes complete fixtures for invalid input, capacity, stale
-selection, antimeridian, no-network, and accessibility, plus demonstration in
-one materially independent interactive host.
+Before a stable external release: freeze this contract at an immutable catalog
+ID, complete fixtures for invalid input, capacity, stale selection,
+antimeridian, no-network, and accessibility, and demonstrate it in one
+materially independent interactive host.

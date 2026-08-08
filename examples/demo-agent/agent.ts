@@ -3,8 +3,8 @@
 const A2UI_MIME_TYPE = "application/a2ui+json";
 const A2UI_CHARTS_CATALOG_ID =
   "https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/charts/v1/catalog.json";
-const A2UI_MAPS_V2_CATALOG_ID =
-  "https://github.com/artemis-sh/a2ui-catalogs/blob/maps-v2.0.0/catalogs/maps/v2/catalog.json";
+const A2UI_MAPS_CATALOG_ID =
+  "https://github.com/artemis-sh/a2ui-catalogs/blob/main/catalogs/maps/v1/catalog.json";
 
 type ContentPart = Record<string, unknown> & { type: string };
 type ORItem = Record<string, unknown> & { type: string };
@@ -828,7 +828,7 @@ function customerMapMessages(): Array<Record<string, unknown>> {
   return [
     {
       version: A2UI_VERSION,
-      createSurface: { surfaceId, catalogId: A2UI_MAPS_V2_CATALOG_ID },
+      createSurface: { surfaceId, catalogId: A2UI_MAPS_CATALOG_ID },
     },
     { version: A2UI_VERSION, updateComponents: { surfaceId, components } },
     {
@@ -885,8 +885,8 @@ function mapConformanceMessages(
   const map: Record<string, unknown> = {
     id: "map",
     component: "Map",
-    title: `Maps v2 fixture: ${fixture}`,
-    description: "A deterministic Maps v2 conformance fixture from the demo agent.",
+    title: `Maps v1 fixture: ${fixture}`,
+    description: "A deterministic Maps v1 conformance fixture from the demo agent.",
     selection: {
       path: "/selectedFeature",
       mode: fixture === "multiple-selection" ? "multiple" : "single",
@@ -946,7 +946,7 @@ function mapConformanceMessages(
   const messages: Array<Record<string, unknown>> = [
     {
       version: A2UI_VERSION,
-      createSurface: { surfaceId, catalogId: A2UI_MAPS_V2_CATALOG_ID },
+      createSurface: { surfaceId, catalogId: A2UI_MAPS_CATALOG_ID },
     },
     {
       version: A2UI_VERSION,
@@ -1457,14 +1457,14 @@ function buildReply(parsed: ReturnType<typeof lastUserText>): BuiltReply {
                     : null;
   if (mapFixture) {
     return {
-      reasoning: `The user requested the ${mapFixture} Maps v2 conformance fixture.`,
-      reply: `I called \`get_maps_v2_fixture\` with the **${mapFixture}** fixture. It is a deterministic Maps v2 validation surface.`,
+      reasoning: `The user requested the ${mapFixture} Maps v1 conformance fixture.`,
+      reply: `I called \`get_maps_v1_fixture\` with the **${mapFixture}** fixture. It is a deterministic Maps v1 validation surface.`,
       tool: {
-        name: "get_maps_v2_fixture",
+        name: "get_maps_v1_fixture",
         args: JSON.stringify({ fixture: mapFixture }),
         output: a2uiToolOutput(
-          `a2ui://demo/maps-v2/${mapFixture}`,
-          `Maps v2 conformance fixture: ${mapFixture}.`,
+          `a2ui://demo/maps-v1/${mapFixture}`,
+          `Maps v1 conformance fixture: ${mapFixture}.`,
           mapConformanceMessages(mapFixture),
         ),
       },
@@ -1476,7 +1476,7 @@ function buildReply(parsed: ReturnType<typeof lastUserText>): BuiltReply {
       reasoning:
         "The user wants a geographic view. I'll return the customer-footprint surface from the Maps catalog.",
       reply:
-        "I called `get_customer_map` to show the Maps v2 customer footprint with selectable locations and schematic connections.",
+        "I called `get_customer_map` to show the experimental Maps v1 customer footprint with selectable locations and schematic connections.",
       tool: {
         name: "get_customer_map",
         args: JSON.stringify({ metric: "annual revenue" }),

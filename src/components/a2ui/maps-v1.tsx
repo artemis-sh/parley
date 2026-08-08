@@ -1,4 +1,4 @@
-/** Native renderer for the immutable, layer-oriented Artemis Maps v2 catalog. */
+/** Native renderer for the experimental, layer-oriented Artemis Maps v1 catalog. */
 
 import { useEffect, useRef } from "react";
 import type { ViewProps } from "~/components/a2ui/catalog";
@@ -20,11 +20,11 @@ import {
   resolveString,
 } from "~/lib/a2ui";
 import {
-  isMapsV2FeatureReference,
-  type MapsV2FeatureReference,
-  validateMapsV2Layers,
-  validateMapsV2Selection,
-} from "~/lib/a2ui-maps-v2";
+  isMapsV1FeatureReference,
+  type MapsV1FeatureReference,
+  validateMapsV1Layers,
+  validateMapsV1Selection,
+} from "~/lib/a2ui-maps-v1";
 
 const asRecord = (value: unknown): Record<string, unknown> | null =>
   typeof value === "object" && value !== null && !Array.isArray(value)
@@ -40,8 +40,8 @@ const stringId = (value: unknown): string | null =>
   typeof value === "string" && value.length > 0 ? value : null;
 
 type Feature =
-  | { reference: MapsV2FeatureReference; label: string; point: MapPoint }
-  | { reference: MapsV2FeatureReference; label: string; connection: MapFlow };
+  | { reference: MapsV1FeatureReference; label: string; point: MapPoint }
+  | { reference: MapsV1FeatureReference; label: string; connection: MapFlow };
 
 type ParsedLayer = {
   layerId: string;
@@ -151,9 +151,9 @@ function parseLayer(
   return { layerId, features, error: null };
 }
 
-function selectedReferences(value: unknown): MapsV2FeatureReference[] {
+function selectedReferences(value: unknown): MapsV1FeatureReference[] {
   const values = Array.isArray(value) ? value : value === null ? [] : [value];
-  return values.filter(isMapsV2FeatureReference);
+  return values.filter(isMapsV1FeatureReference);
 }
 
 function featureText(feature: Feature): string {
@@ -180,12 +180,12 @@ function LayerFallback({
   );
 }
 
-export function MapV2View({ component, base }: ViewProps) {
+export function MapV1View({ component, base }: ViewProps) {
   const { dataModel, setValue, disabled } = useA2uiSurface();
   const title = resolveString(component.title, dataModel, base);
   const description = resolveString(component.description, dataModel, base);
   const layersValue = Array.isArray(component.layers) ? component.layers : [];
-  const shapeErrors = validateMapsV2Layers(layersValue);
+  const shapeErrors = validateMapsV1Layers(layersValue);
   const invalidLayerIds = new Set(
     shapeErrors.flatMap((error) => (error.layerId ? [error.layerId] : [])),
   );
@@ -212,7 +212,7 @@ export function MapV2View({ component, base }: ViewProps) {
   const selectionValue = selectionPath
     ? pointerGet(dataModel, selectionPath)
     : null;
-  const selectionError = validateMapsV2Selection(selectionValue, knownFeatures);
+  const selectionError = validateMapsV1Selection(selectionValue, knownFeatures);
   const selected = selectedReferences(selectionValue);
   const selectedKeys = new Set(
     selected.map(
@@ -228,7 +228,7 @@ export function MapV2View({ component, base }: ViewProps) {
     setValue(selectionPath, null);
   }, [selectionError, selectionPath, setValue]);
 
-  const toggle = (reference: MapsV2FeatureReference) => {
+  const toggle = (reference: MapsV1FeatureReference) => {
     if (disabled || !selectionPath) return;
     const key = `${reference.layerId}\u0000${reference.featureId}`;
     if (selectionMode === "single") {
